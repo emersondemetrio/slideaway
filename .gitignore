@@ -92,6 +92,18 @@ dist
 # vuepress build output
 .vuepress/dist
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+
+# MinIO / Postgres local volumes (if ever run outside docker-compose volumes)
+minio-data/
+pgdata/
+
 # vuepress v2.x temp directory
 .temp
 
