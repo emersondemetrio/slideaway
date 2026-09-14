@@ -1,3 +1,6 @@
+import uuid
+
+from app.models import Participant
 from tests.conftest import auth_headers
 
 
@@ -102,7 +105,7 @@ async def test_checkin_assigns_participant_number_when_no_name(client, regular_u
     assert second.json()["resolved_name"] == "Participant #2"
 
 
-async def test_checkin_parses_device_info_from_user_agent(client, regular_user_token):
+async def test_checkin_parses_device_info_from_user_agent(client, db_session, regular_user_token):
     deck_version_id = await _create_deck_version_id(client, regular_user_token)
     room_id = (
         await client.post(
@@ -120,6 +123,29 @@ async def test_checkin_parses_device_info_from_user_agent(client, regular_user_t
         },
     )
     assert response.status_code == 200
+
+    participant = await db_session.get(Participant, uuid.UUID(response.json()["participant_id"]))
+    assert participant.device_type == "mobile"
+    assert participant.browser == "Mobile Safari"
+    assert participant.os == "iOS"
+
+
+async def test_checkin_without_user_agent_leaves_device_info_blank(
+    client, db_session, regular_user_token
+):
+    deck_version_id = await _create_deck_version_id(client, regular_user_token)
+    room_id = (
+        await client.post(
+            f"/decks/{deck_version_id}/rooms", headers=auth_headers(regular_user_token)
+        )
+    ).json()["id"]
+
+    response = await client.post(f"/rooms/{room_id}/checkin", json={})
+
+    participant = await db_session.get(Participant, uuid.UUID(response.json()["participant_id"]))
+    assert participant.device_type is None
+    assert participant.browser is None
+    assert participant.os is None
 
 
 async def test_react_requires_an_active_room(client, regular_user_token):

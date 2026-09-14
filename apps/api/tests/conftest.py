@@ -51,11 +51,13 @@ async def _schema():
     await test_engine.dispose()
 
 
+_ALL_TABLE_NAMES = ", ".join(f'"{table.name}"' for table in Base.metadata.sorted_tables)
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def _clean_tables():
     async with test_engine.begin() as conn:
-        for table in reversed(Base.metadata.sorted_tables):
-            await conn.execute(text(f'TRUNCATE TABLE "{table.name}" CASCADE'))
+        await conn.execute(text(f"TRUNCATE TABLE {_ALL_TABLE_NAMES} CASCADE"))
     yield
 
 
@@ -75,7 +77,7 @@ async def client():
     transport = ASGITransport(app=api)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-    api.dependency_overrides.clear()
+    api.dependency_overrides.pop(get_db, None)
 
 
 async def _make_user(db_session, email: str, role: Role) -> User:
