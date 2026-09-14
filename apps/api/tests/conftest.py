@@ -4,21 +4,22 @@ import urllib.parse
 import asyncpg
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.database import Base, get_db
 from app.main import api
 from app.models import Role, User
 from app.security import hash_password
 
-TEST_PASSWORD = "test-password-123"
-
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
     "postgresql+asyncpg://slideaway:slideaway@localhost:5433/slideaway_test",
 )
+TEST_PASSWORD = "test-password-123"
 
 test_engine = create_async_engine(TEST_DATABASE_URL)
+TestSessionLocal = async_sessionmaker(test_engine, expire_on_commit=False)
 
 
 async def _ensure_test_database_exists() -> None:
@@ -50,22 +51,25 @@ async def _schema():
     await test_engine.dispose()
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_tables():
+    async with test_engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(text(f'TRUNCATE TABLE "{table.name}" CASCADE'))
+    yield
+
+
 @pytest_asyncio.fixture
 async def db_session():
-    async with test_engine.connect() as conn:
-        await conn.begin()
-        session = AsyncSession(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
-        try:
-            yield session
-        finally:
-            await session.close()
-            await conn.rollback()
+    async with TestSessionLocal() as session:
+        yield session
 
 
 @pytest_asyncio.fixture
-async def client(db_session):
+async def client():
     async def _override_get_db():
-        yield db_session
+        async with TestSessionLocal() as session:
+            yield session
 
     api.dependency_overrides[get_db] = _override_get_db
     transport = ASGITransport(app=api)
@@ -74,7 +78,7 @@ async def client(db_session):
     api.dependency_overrides.clear()
 
 
-async def _make_user(db_session: AsyncSession, email: str, role: Role) -> User:
+async def _make_user(db_session, email: str, role: Role) -> User:
     user = User(email=email, password_hash=hash_password(TEST_PASSWORD), role=role)
     db_session.add(user)
     await db_session.commit()
