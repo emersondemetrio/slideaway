@@ -6,18 +6,18 @@ A presenter runs a talk from a room. Everyone in the audience scans a QR code, j
 
 ## Roles
 
-- **Admin** — native Android app. Starts and stops a room, advances and goes back through slides. Not built yet (`apps/mobile/android` is a placeholder).
-- **Display** — web page, meant for a laptop plugged into a projector. Mirrors the admin's current slide and shows reactions as they come in.
-- **Viewer** — web page, no install. Audience members check in via QR code, see the current slide, can browse back locally, and send reactions.
-- **Dashboard** — web page. Create decks, start or resume rooms, invite other users (invite-only signup), view basic metrics.
+- **Admin** - native Android app. Starts and stops a room, advances and goes back through slides. Not built yet (`apps/mobile/android` is a placeholder).
+- **Display** - web page, meant for a laptop plugged into a projector. Mirrors the admin's current slide and shows reactions as they come in.
+- **Viewer** - web page, no install. Audience members check in via QR code, see the current slide, can browse back locally, and send reactions.
+- **Dashboard** - web page. Create decks, start or resume rooms, invite other users (invite-only signup), view basic metrics.
 
 Every architecture and product decision behind this, including the reasoning, is in `DECISIONS.md`.
 
 ## Stack
 
-- `apps/api` — FastAPI (Python), SQLAlchemy (async), Postgres, python-socketio for realtime, hand-rolled JWT auth (access/refresh token exchange, role-based access). Dependencies managed with `uv`.
-- `apps/web` — Svelte + Vite (no SvelteKit).
-- `apps/mobile/android` — native Kotlin admin app. Placeholder, not built yet.
+- `apps/api` - FastAPI (Python), SQLAlchemy (async), Postgres, python-socketio for realtime, hand-rolled JWT auth (access/refresh token exchange, role-based access). Dependencies managed with `uv`.
+- `apps/web` - Svelte + Vite (no SvelteKit).
+- `apps/mobile/android` - native Kotlin admin app. Placeholder, not built yet.
 - MinIO for file storage (deck assets), self-hosted, no managed cloud services.
 
 ## Running it locally

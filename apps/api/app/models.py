@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -60,7 +61,7 @@ class User(Base):
     role: Mapped[Role] = mapped_column(String(20), default=Role.USER)
     storage_quota_bytes: Mapped[int] = mapped_column(Integer, default=500 * 1024 * 1024)
     storage_used_bytes: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     deck_series: Mapped[list["DeckSeries"]] = relationship(back_populates="owner")
 
@@ -73,9 +74,9 @@ class Invite(Base):
     role_to_grant: Mapped[Role] = mapped_column(String(20), default=Role.USER)
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     claimed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    claimed_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    expires_at: Mapped[datetime]
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class RefreshToken(Base):
@@ -84,9 +85,9 @@ class RefreshToken(Base):
     id: Mapped[uuid.UUID] = _uuid_pk()
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     jti: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    expires_at: Mapped[datetime]
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class DeckSeries(Base):
@@ -95,7 +96,7 @@ class DeckSeries(Base):
     id: Mapped[uuid.UUID] = _uuid_pk()
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     title: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     owner: Mapped["User"] = relationship(back_populates="deck_series")
     versions: Mapped[list["Deck"]] = relationship(back_populates="series", order_by="Deck.version_number")
@@ -110,7 +111,7 @@ class Deck(Base):
     version_number: Mapped[int] = mapped_column(Integer)
     source_type: Mapped[SourceType] = mapped_column(String(20))
     content: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     series: Mapped["DeckSeries"] = relationship(back_populates="versions")
     rooms: Mapped[list["Room"]] = relationship(back_populates="deck")
@@ -131,8 +132,8 @@ class Room(Base):
     deck_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("decks.id"))
     status: Mapped[RoomStatus] = mapped_column(String(20), default=RoomStatus.ACTIVE)
     current_slide_index: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    ended_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     deck: Mapped["Deck"] = relationship(back_populates="rooms")
     participants: Mapped[list["Participant"]] = relationship(back_populates="room")
@@ -152,7 +153,7 @@ class Participant(Base):
     location_opt_in: Mapped[bool] = mapped_column(default=False)
     latitude: Mapped[float | None] = mapped_column(nullable=True)
     longitude: Mapped[float | None] = mapped_column(nullable=True)
-    joined_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     room: Mapped["Room"] = relationship(back_populates="participants")
 
@@ -169,6 +170,6 @@ class Reaction(Base):
     participant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("participants.id"))
     emoji_type: Mapped[ReactionType] = mapped_column(String(20))
     slide_index: Mapped[int] = mapped_column(Integer)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     room: Mapped["Room"] = relationship(back_populates="reactions")
