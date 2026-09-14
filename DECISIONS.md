@@ -1,5 +1,15 @@
 # Slideaway - Decision Log
 
+## Open decision: licensing before launch
+
+Repo currently ships Apache 2.0, public, from the initial commit. Under a permissive license, anyone (including a well-funded competitor) can clone this once it has real traction, self-host it, and sell it, with no obligation beyond keeping the license notice - which is a direct conflict with the stated goal of eventually selling usage of this product.
+
+**Not urgent today** - nobody forks a scaffold with no users. But license changes are not retroactive: anything already released under Apache 2.0 stays Apache 2.0 forever for whoever already has it. Only future commits can carry a different license, so this needs a conscious decision before real traction/marketing, not after.
+
+**Likely direction when that day comes:** Business Source License (BUSL/BSL) - source-available, not OSI-approved open source. Anyone can view/use/modify for internal use or testing, but competing production/commercial use requires a paid agreement, and each version auto-converts to a fully open license (commonly Apache 2.0) after a set number of years (commonly ~4). Used by Sentry, CockroachDB, and (controversially) Redis for exactly this reason. The Functional Source License is a simpler, newer alternative in the same spirit.
+
+**Open uncertainty:** CodeRabbit's free-forever tier is specifically for open-source projects, and BUSL is explicitly not OSI-approved open source. Unconfirmed whether switching would knock the repo out of that free tier - check when this decision actually gets made.
+
 ## Repo layout & build tooling
 
 - **Classic monorepo**, not a flat `backend/`/`frontend/` split:
