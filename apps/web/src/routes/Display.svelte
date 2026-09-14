@@ -1,6 +1,7 @@
 <script>
   import { onDestroy, onMount } from "svelte";
   import { fly } from "svelte/transition";
+  import { apiFetch } from "../lib/api.js";
   import { joinRoom, leaveRoom, onPresentationEnded, onReaction, onSlideChanged } from "../lib/socket.js";
 
   let { params } = $props();
@@ -23,7 +24,11 @@
   let bursts = $state([]);
   let burstId = 0;
 
-  onMount(() => {
+  onMount(async () => {
+    const room = await apiFetch(`/rooms/${roomId}`);
+    slideIndex = room.current_slide_index;
+    ended = room.status === "ended";
+
     joinRoom(roomId);
 
     onSlideChanged((event) => {
